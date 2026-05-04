@@ -1,10 +1,12 @@
 import { useState } from 'react'
-import {checkHealth, indexRepo} from "./api"
-import type { IndexResponse } from "./api";
+import {checkHealth, indexRepo, answerQuery} from "./api"
+import type { IndexResponse, Response } from "./api";
 import reactLogo from './assets/react.svg'
 import viteLogo from './assets/vite.svg'
 import heroImg from './assets/hero.png'
 import './App.css'
+
+import Markdown from 'react-markdown'
 
 function App() {
   // const [count, setCount] = useState(0)
@@ -17,6 +19,11 @@ function App() {
   const [isIndexing, setIsIndexing] = useState<boolean>(false);
   const [indexError, setIndexError] = useState<string | null>(null);
   
+  const [query, setQuery] = useState<string>("");
+  const [answerData, setAnswerData] = useState<Response|null>(null);
+  const [queryError, setQueryError] = useState<string | null>(null);
+  const [isAsking, setIsAsking] = useState<boolean>(false);
+
   async function handleCheckBackend() {
     setStatusError(null);
     try {
@@ -41,6 +48,27 @@ function App() {
       setIndexError( err instanceof Error ? err.message : "Unknown indexing error");
     }
     finally { setIsIndexing(false); }
+  }
+
+  async function handleAskQuery() {
+    if (!repoInfo) {
+      setIndexError("Index a repository first");
+      return;
+    }
+
+    setQueryError(null);
+    setAnswerData(null);
+    setIsAsking(true);
+
+    try{
+      const data = await answerQuery(repoInfo.repo_id, query);
+      setAnswerData(data);
+    }
+    catch (err) {
+      setQueryError( err instanceof Error ? err.message : "Unknown query error");
+    } 
+    finally { setIsAsking(false); }
+
   }
 
   return (
@@ -82,7 +110,104 @@ function App() {
 
         {indexError && <p style={{color:"red"}}>{indexError}</p> }
 
+      </section >
+
+      <section style={{ marginBottom: "2rem"}}>
+        <h2>Ask about the codebase</h2>
+        <input 
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          style={{ width: "800px", maxWidth:"100%", padding: "0.5rem"}}
+        />
+        <button
+          onClick={handleAskQuery}
+          disabled={isAsking}
+          style={{ marginLeft:"0.5rem"}}
+        >
+          {isAsking ? "Searching.." : "Ask Question"}
+
+        </button>
       </section>
+
+      {queryError && <p style={{color:"red"}}>{queryError}</p> }
+
+      {answerData && (
+        <section>
+          <div style={{
+            border: "1px solid #ac2222",
+            borderRadius: "8px",
+            padding: "16px",
+            lineHeight: "1.1",
+            fontSize: "13px",
+            textAlign: "left" }}>
+            <Markdown>{answerData.answer}</Markdown>
+          </div>
+
+          <div style={{ display: "grid", alignItems:"start", gap: "16px", gridTemplateColumns: "1fr 1fr",}}>
+            <div>
+                <h2 style={{ marginTop:"2rem" }}>Cohere Reranked Sources</h2>
+                {answerData.sources.map((source, idx) => (
+                  <div
+                    style={{
+                      marginBottom: "1rem",
+                      padding: "1rem",
+                      border: "1px solid #ac2222",
+                      borderRadius: "4px",
+                      lineHeight: "1.1",
+                      fontSize: "12px"
+                    }}>
+                    <b>{source.path}: Lines {source.start_line}-{source.end_line}</b>
+                    <p>Score: {source.score}</p>
+                    <pre style={{ fontSize: "12px", lineHeight: "1.", textAlign: "left",
+                      whiteSpace: "pre-wrap", overflowX: "auto"
+                    }}>
+                      
+                      <code style={{ fontSize: "12px"}}>
+                        {source.text.slice(0, 1800)}
+
+                      </code>
+                          
+                    </pre>
+                    
+                </div>
+              ))}
+            </div>
+
+            <div>
+              <h2 style={{ marginTop:"2rem" }}>Raw Hybrid Retrieved Sources</h2>
+              {answerData.initial_sources.map((source, idx) => (
+                <div
+                  style={{
+                    marginBottom: "1rem",
+                    padding: "1rem",
+                    border: "1px solid #ac2222",
+                    borderRadius: "4px",
+                    lineHeight: "1.1",
+                    fontSize: "12px"
+                  }}>
+                  <b>{source.path}: Lines {source.start_line}-{source.end_line}</b>
+                  <p>Score: {source.score}</p>
+                  <pre style={{ fontSize: "12px", lineHeight: "1.", textAlign: "left",
+                    whiteSpace: "pre-wrap", overflowX: "auto"
+                  }}>
+                    
+                    <code style={{ fontSize: "12px"}}>
+                      {source.text.slice(0, 1800)}
+
+                    </code>
+                        
+                  </pre>
+                </div>
+              ))}
+            </div>
+
+          </div>
+
+
+        </section>
+      )}
+
+      
     </main>
   )
 

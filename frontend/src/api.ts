@@ -15,6 +15,22 @@ export type IndexResponse = {
     chunk_count:number;
 };
 
+export type Chunk = {
+    path: string;
+    start_line: number;
+    end_line: number;
+    score: number | null;
+    text: string;
+};
+
+export type Response = {
+    answer: string;
+    sources: Chunk[];
+    initial_sources: Chunk[];
+}
+    
+    
+
 export async function indexRepo(repoUrl:string): Promise<IndexResponse> {
     const response = await fetch(`${API_BASE_URL}/index`, {
         method: "POST",
@@ -30,5 +46,25 @@ export async function indexRepo(repoUrl:string): Promise<IndexResponse> {
         const err = await response.json().catch(()=>null);
         throw new Error(err?.detail || "Failed to index repo");
     }
+    return response.json();
+}
+
+export async function answerQuery(repoId: string, query: string): Promise<Response> {
+    const response = await fetch(`${API_BASE_URL}/ask`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+            repo_id: repoId,
+            query: query
+        })
+    })
+
+    if (!response.ok) {
+        const err = await response.json().catch(()=>null);
+        throw new Error(err?.detail || "Failed to ask query");
+    }
+
     return response.json();
 }
