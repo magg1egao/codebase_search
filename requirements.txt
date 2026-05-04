@@ -1,0 +1,6 @@
+cohere
+numpy
+python-dotenv
+pydantic
+fastapi
+uvicorn[standard]
