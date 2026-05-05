@@ -3,7 +3,7 @@ SUPPORTED = {
     ".js",
     ".jsx",
     ".ts",
-    "tsx",
+    ".tsx",
     ".java",
     ".c",
     ".cpp",
@@ -31,19 +31,20 @@ SKIP_DIRS = {
     "node_modules",
     "__pycache__",
     "build",
-    ".vs_code",
+    ".vscode",
     ".cache"
 }
 
-MAX_FILES = 300
+MAX_FILES = 250
 MAX_FILE_SIZE_BYTES = 120_000
 
-CHUNK_LINE_COUNT = 80
-CHUNK_OVERLAP = 20
+CHUNK_LINE_COUNT = 70
+CHUNK_OVERLAP = 15
 
 RETRIEVAL_TOP_K = 20
 RERANK_TOP_N = 5
-EMBED_BATCH_SIZE = 64
+EMBED_BATCH_SIZE = 32
+MAX_CHUNKS_TO_EMBED = 50
 
 EMBED_MODEL = "embed-v4.0"
 RERANK_MODEL = "rerank-v4.0-pro"

@@ -11,6 +11,6 @@ class CodeChunk:
     def label(self):
         return f"{self.path}:{self.start_line}-{self.end_line}"
     def as_document(self):
-        return f"File: {self.path}\n"
+        return (f"File: {self.path}\n"
         f"Lines: {self.start_line}-{self.end_line}\n"
-        f"{self.text}"
+        f"{self.text}")

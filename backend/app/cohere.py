@@ -2,6 +2,7 @@ import os
 import cohere
 import numpy as np
 from dotenv import load_dotenv
+import time
 
 from app.config import EMBED_MODEL, CHAT_MODEL, RERANK_MODEL, RERANK_TOP_N, EMBED_BATCH_SIZE
 from app.models import CodeChunk
@@ -28,6 +29,7 @@ def embed_texts(client, texts, input_type):
             embedding_types = ["float"]
         )
         vectors.extend(response.embeddings.float)
+        # time.sleep(1)
     embeddings = np.array(vectors, dtype=np.float32)
     norms = np.linalg.norm(embeddings, axis=1, keepdims=True)
     norms[norms==0] =1

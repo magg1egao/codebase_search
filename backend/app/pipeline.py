@@ -1,10 +1,11 @@
 import shutil
 from dataclasses import dataclass
 import numpy as np
+import time
 
 from app.chunker import chunk_files
 from app.cohere import embed_texts, get_cohere_client, rerank, prompt_answer
-from app.config import RETRIEVAL_TOP_K
+from app.config import RETRIEVAL_TOP_K, MAX_CHUNKS_TO_EMBED
 from app.github_load import clone_repo, collect_files, make_repo_id
 from app.models import CodeChunk
 from app.search import get_top_chunks
@@ -30,11 +31,17 @@ def index_repository(repo_url):
 
         if not chunks:
             raise RuntimeError("No supported files found in this repository")
-        embeddings = embed_texts(
-            client=client,
-            texts=[c.as_document() for c in chunks],
-            input_type = "search_document"
-        )
+        # chunks = chunks[:MAX_CHUNKS_TO_EMBED]
+        embeddings = []
+
+        for i in range(0, len(chunks), MAX_CHUNKS_TO_EMBED):
+            embeddings.extend(embed_texts(
+                client=client,
+                texts=[c.as_document() for c in chunks[i: min(i+MAX_CHUNKS_TO_EMBED, len(chunks))]],
+                input_type = "search_document"
+            ))
+            time.sleep(15)
+        embeddings = np.array(embeddings, dtype=np.float32)
 
         repo_index = RepoIdx(
             repo_id = repo_id,

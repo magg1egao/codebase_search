@@ -21,6 +21,7 @@ def check():
 @app.post("/index", response_model=IndexResponse)
 def index_repo(request: IndexRequest):
     try:
+        # print("INDEX ENDPOINT CALLED")
         repo_index = index_repository(request.repo_url)
         return IndexResponse(
             repo_id=repo_index.repo_id,
